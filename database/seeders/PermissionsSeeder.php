@@ -20,6 +20,7 @@ class PermissionsSeeder extends Seeder
             ["name"=>"create_outpast","guard_name"=>"students"],
             ["name"=>"view_outpast","guard_name"=>"web"],
             ["name"=>"update_outpast","guard_name"=>"web"],
+            ["name"=>"view_outpast","guard_name"=>"students"],
         ];
 
         foreach($roles as $role)
@@ -40,6 +41,6 @@ class PermissionsSeeder extends Seeder
 
          //assigning Permissions student
          $admin=Role::where("name","student")->first();
-         $admin->givePermissionTo('create_outpast');
+         $admin->givePermissionTo(['create_outpast','view_outpast']);
     }
 }

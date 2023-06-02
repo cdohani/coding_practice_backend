@@ -34,6 +34,8 @@ Route::middleware('auth:sanctum')->group( function () {
         Route::post('/', 'store');
         Route::post('/change-outpass-status', 'outpassStatus');
     });
+    //logout
+    Route::post('logout', [StudentController::class, 'logout']);
 });
 
 Route::controller(StudentController::class)->prefix("student")->group(function(){

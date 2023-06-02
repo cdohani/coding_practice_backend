@@ -19,7 +19,8 @@ class OutpassResource extends JsonResource
             'outpass_date' => $this->outpass_date,
             'outpass_from' => $this->outpass_from,
             'outpass_to' => $this->outpass_to,
-            'student_name'=> $this->students->name
+            'student_name'=> $this->students->name,
+            'status'=>$this->status,
         ];
     }
 }

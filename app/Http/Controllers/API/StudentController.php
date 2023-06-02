@@ -45,7 +45,7 @@ class StudentController extends BaseController
             $user = $this->studentGuard()->user();
             $success['token'] = $user->createToken('MyApp')->plainTextToken;
             $success['name'] = $user->name;
-            $success['permissions']=UserPermissions::collection($user->getAllPermissions());
+            $success['permissions'] = UserPermissions::collection($user->getAllPermissions());
             return $this->sendResponse($success, 'User login successfully.');
         } else {
             return $this->sendError('Unauthorised.', ['error' => 'Unauthorised'], 422);
@@ -56,5 +56,25 @@ class StudentController extends BaseController
     protected function studentGuard()
     {
         return Auth::guard('students');
+    }
+    public function logout(Request $request)
+    {
+
+        // Get the authenticated user
+        $user = Auth::user();
+
+        if ($user) {
+            // Perform any additional logic you need for logout
+            // For example, you can invalidate any tokens or session data
+
+            // Logout the user
+            $request->user()->currentAccessToken()->delete();
+
+            // Return a response indicating successful logout
+            return $this->sendResponse('', 'User logout successfully.');
+        }
+
+        // Return a response indicating that the user is not authenticated
+        return $this->sendError('Unauthorised.', ['error' => 'Unauthorised'], 401);
     }
 }
