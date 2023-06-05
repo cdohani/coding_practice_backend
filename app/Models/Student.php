@@ -24,6 +24,7 @@ class Student extends Authenticatable
         'course',
         'phoneNumber',
         'registrationNo',
-        'roomNo'
+        'roomNo',
+        'image'
     ];
 }

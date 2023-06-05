@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string("roomNo");
             $table->string("email");
             $table->string("password");
+            $table->string("image")->nullable();
             $table->timestamps();
         });
     }

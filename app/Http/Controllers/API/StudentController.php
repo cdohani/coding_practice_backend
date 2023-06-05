@@ -8,12 +8,15 @@ use App\Models\Student;
 use Faker\Provider\Base;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use GuzzleHttp\Client;
 
 class StudentController extends BaseController
 {
     public function register(Request $request)
     {
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|max:255',
             'email' => 'required|email|max:255|unique:students,email',
@@ -23,6 +26,7 @@ class StudentController extends BaseController
             'registrationNo' => 'required|max:255',
             'phoneNumber' => 'required|max:255',
             'roomNo' => 'required|max:255',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -31,18 +35,30 @@ class StudentController extends BaseController
 
         $input = $request->all();
         $input['password'] = bcrypt($input['password']);
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = $image->getClientOriginalName();
+            $imagePath = $image->storeAs('public/images', $imageName);
+            $input["image"] = $imagePath;
+        }
+
         $user = Student::create($input);
         $user->assignRole("student");
-        $success['token'] =  $user->createToken('MyApp')->plainTextToken;
-        $success['name'] =  $user->name;
+        $success['token'] = $user->createToken('MyApp')->plainTextToken;
+        $success['name'] = $user->name;
 
-        return $this->sendResponse($success, 'User register successfully.');
+        return $this->sendResponse($success, 'User registered successfully.');
     }
 
     public function login(Request $request)
     {
+
         if ($this->studentGuard()->attempt(['id' => $request->id, 'password' => $request->password])) {
+
             $user = $this->studentGuard()->user();
+            return $this->authenticateUsingImage($user, $request);
+            $success['image_auth'] = $this->authenticateUsingImage($user, $request);
             $success['token'] = $user->createToken('MyApp')->plainTextToken;
             $success['name'] = $user->name;
             $success['permissions'] = UserPermissions::collection($user->getAllPermissions());
@@ -59,22 +75,44 @@ class StudentController extends BaseController
     }
     public function logout(Request $request)
     {
-
-        // Get the authenticated user
-        $user = Auth::user();
-
-        if ($user) {
-            // Perform any additional logic you need for logout
-            // For example, you can invalidate any tokens or session data
-
-            // Logout the user
+        if (Auth::user()) {
             $request->user()->currentAccessToken()->delete();
-
-            // Return a response indicating successful logout
             return $this->sendResponse('', 'User logout successfully.');
         }
-
-        // Return a response indicating that the user is not authenticated
         return $this->sendError('Unauthorised.', ['error' => 'Unauthorised'], 401);
+    }
+
+    protected function authenticateUsingImage($user, $request)
+    {
+
+        $client = new Client();
+        $requestImageData = file_get_contents($request->image);
+        $requestImage=base64_encode($requestImageData);
+        $imageUrl = url(Storage::url($user->image));
+        $userImageData = file_get_contents($imageUrl);
+        $userImageDataimage=base64_encode( json_decode($userImageData));
+        return $userImageDataimage;
+        // try {
+        //     $response = $client->post('https://faceapi.mxface.ai/api/v3/face/verify', [
+        //         'headers' => [
+        //             'Content-Type' => 'application/json',
+        //             'Subscriptionkey' => 'Eab8vbwNnRKz0MJHsb-3yWZmDP5Hv1595',
+        //         ],
+        //         'json' => [
+        //             'encoded_image1' => Storage::url($requestImage),
+        //             'encoded_image2' => Storage::url($userImageDataimage)
+        //         ],
+        //     ]);
+
+        //     $statusCode = $response->getStatusCode();
+        //     $body = $response->getBody();
+        //     return $body;
+        //     // Process the response data as needed
+        //     // ...
+        // } catch (\Exception $e) {
+        //     return $e;
+        //     // Handle request exceptions
+        //     // ...
+        // }
     }
 }
