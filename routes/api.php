@@ -34,6 +34,11 @@ Route::middleware('auth:sanctum')->group( function () {
         Route::post('/', 'store');
         Route::post('/change-outpass-status', 'outpassStatus');
     });
+    
+    Route::controller(StudentController::class)->prefix("student")->group(function(){
+        Route::post('/get-student-permissions', 'getStudentPermissions');
+      
+    });
     //logout
     Route::post('logout', [StudentController::class, 'logout']);
 });
